@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'A Dream Come True';
+  src: url('/fonts/a-dream-come-true.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bright Marching';
+  src: url('/fonts/bright-marching.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --primary: #131B2B;
+  --primary-hover: #2F4A63;
+  --primary-dark: #5B91A3;
+  --primary-light: #CFEAE0;
+  --primary-glow: #CFEAE0;
+}
+
+@layer base {
+  body {
+    background-color: var(--primary);
+    color: #f1f7f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Big titles font class */
+.font-dream-title {
+  font-family: 'A Dream Come True', cursive, sans-serif;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+
+/* Brand name font class */
+.font-bright-brand {
+  font-family: 'Bright Marching', serif;
+  letter-spacing: 0.06em;
+}
+
+/* A2SIL brand buttons */
+.btn-primary-mint {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-radius: 9999px;
+  padding: 0.65rem 1.45rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 18px rgba(207, 234, 224, 0.28);
+}
+
+.btn-primary-mint:hover {
+  background-color: #e2f4ed;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(207, 234, 224, 0.45);
+}
+
+.btn-primary-mint:active {
+  transform: translateY(0);
+}
+
+/* Secondary Button */
+.btn-primary-outline {
+  background-color: rgba(47, 74, 99, 0.25);
+  color: var(--primary-light);
+  border: 1px solid var(--primary-dark);
+  border-radius: 9999px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-outline:hover {
+  background-color: var(--primary-hover);
+  color: #ffffff;
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+/* Navbar */
+.navbar-brand {
+  background-color: rgba(19, 27, 43, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(207, 234, 224, 0.1);
+}
+
+/* Card Glow Effect */
+.card-brand {
+  background-color: #1a2438;
+  border: 1px solid rgba(207, 234, 224, 0.1);
+  box-shadow: 0 10px 30px -5px rgba(10, 14, 24, 0.5), inset 0 1px 0 0 rgba(207, 234, 224, 0.08);
+}
+
+.card-brand:hover {
+  border-color: rgba(207, 234, 224, 0.25);
+  background-color: #202d44;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-hover);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
