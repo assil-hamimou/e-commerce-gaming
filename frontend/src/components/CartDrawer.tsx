@@ -52,7 +52,7 @@ export const CartDrawer: React.FC = () => {
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
-        <div className="w-screen max-w-md bg-[#131B2B] border-l border-[#2F4A63] shadow-2xl flex flex-col">
+        <div role="dialog" aria-modal="true" aria-labelledby="cart-title" className="flex w-screen max-w-md flex-col border-l border-white/10 bg-[#131B2B] shadow-2xl">
           
           {/* Header */}
           <div className="p-6 border-b border-[#2F4A63] bg-[#182236] flex items-center justify-between">
@@ -61,7 +61,7 @@ export const CartDrawer: React.FC = () => {
                 <ShoppingBag className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-white tracking-tight">
+                <h2 id="cart-title" className="text-base font-extrabold text-white tracking-tight">
                   Votre Panier
                 </h2>
                 <span className="text-[11px] font-medium text-[#5B91A3]">
@@ -85,10 +85,11 @@ export const CartDrawer: React.FC = () => {
                 <div className="w-16 h-16 rounded-full bg-[#2F4A63]/60 text-[#CFEAE0] border border-[#5B91A3] mx-auto flex items-center justify-center">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-extrabold text-white tracking-tight">Commande Confirmée !</h3>
+                <h3 className="text-xl font-extrabold text-white tracking-tight">Commande enregistrée</h3>
                 <p className="text-xs text-slate-300 leading-relaxed max-w-xs mx-auto">
                   Votre commande <span className="font-mono font-bold text-[#CFEAE0]">#{orderSuccess.id}</span> d'un montant de <span className="font-mono font-bold text-[#CFEAE0]">{orderSuccess.total.toFixed(2)} DH</span> a été enregistrée avec succès.
                 </p>
+                <p className="text-xs text-[#8ba8b4]">Le paiement reste à confirmer. Retrouvez l’avancement dans votre compte.</p>
                 <button
                   onClick={() => {
                     setOrderSuccess(null);
@@ -114,7 +115,7 @@ export const CartDrawer: React.FC = () => {
                 </div>
 
                 {errorMsg && (
-                  <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                  <div role="alert" className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-200 text-xs">
                     {errorMsg}
                   </div>
                 )}
@@ -140,8 +141,8 @@ export const CartDrawer: React.FC = () => {
                     <span className="font-mono font-bold text-white">{cart.totalPrice.toFixed(2)} DH</span>
                   </div>
                   <div className="flex justify-between text-[#5B91A3]">
-                    <span>Livraison</span>
-                    <span className="text-[#CFEAE0] font-bold">Gratuite</span>
+                    <span>Frais supplémentaires</span>
+                    <span className="text-[#CFEAE0] font-bold">Aucun</span>
                   </div>
                   <div className="border-t border-[#2F4A63] pt-2 flex justify-between font-extrabold text-sm">
                     <span className="text-white">Total de la commande</span>
@@ -271,7 +272,7 @@ export const CartDrawer: React.FC = () => {
                     setIsCheckingOut(true);
                   }
                 }}
-                className="btn-primary-mint w-full py-3.5 rounded-full font-bold text-xs flex items-center justify-center gap-2 group cursor-pointer"
+                className="btn-primary-mint uiverse-button w-full py-3.5 rounded-full font-bold text-xs flex items-center justify-center gap-2 group cursor-pointer"
               >
                 <span>{isAuthenticated ? 'Finaliser la commande' : 'Se connecter pour commander'}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -51,7 +51,7 @@ export const AuthModal: React.FC = () => {
         onClick={() => setIsAuthModalOpen(false)}
       />
 
-      <div className="relative w-full max-w-md rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-2xl overflow-hidden z-10 p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="auth-title" className="surface-panel relative z-10 max-h-[90vh] w-full max-w-md animate-in fade-in zoom-in-95 overflow-y-auto rounded-[28px] p-6 shadow-2xl duration-200 sm:p-8">
         
         {/* Close Button */}
         <button
@@ -62,20 +62,24 @@ export const AuthModal: React.FC = () => {
         </button>
 
         <div className="flex flex-col items-center text-center mb-6">
-          <h2 className="text-2xl text-white font-dream-title">
+          <h2 id="auth-title" className="text-2xl text-white font-dream-title">
             {tab === 'login' ? 'Connexion Joueur' : 'Nouveau Compte'}
           </h2>
           <p className="text-xs text-[#5B91A3] mt-1">
-            Créez un compte A2SIL pour commander et consulter votre historique.
+            {tab === 'login'
+              ? 'Connectez-vous pour commander et retrouver votre historique.'
+              : 'Créez un compte pour commander et suivre vos achats.'}
           </p>
         </div>
 
         {/* Segmented Control */}
-        <div className="p-1 rounded-full bg-[#131B2B] border border-[#2F4A63] flex mb-6 text-xs font-bold">
+        <div role="tablist" aria-label="Type de compte" className="mb-6 flex rounded-2xl border border-white/10 bg-[#131B2B] p-1 text-xs font-bold">
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'login'}
             onClick={() => { setTab('login'); setError(null); }}
-            className={`flex-1 py-2 rounded-full transition-all ${
+            className={`flex-1 rounded-xl py-2.5 transition-all ${
               tab === 'login'
                 ? 'bg-[#2F4A63] text-[#CFEAE0] shadow-sm'
                 : 'text-slate-400 hover:text-white'
@@ -85,8 +89,10 @@ export const AuthModal: React.FC = () => {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'register'}
             onClick={() => { setTab('register'); setError(null); }}
-            className={`flex-1 py-2 rounded-full transition-all ${
+            className={`flex-1 rounded-xl py-2.5 transition-all ${
               tab === 'register'
                 ? 'bg-[#2F4A63] text-[#CFEAE0] shadow-sm'
                 : 'text-slate-400 hover:text-white'
@@ -100,7 +106,7 @@ export const AuthModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {error && (
-            <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium">
+            <div role="alert" className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs font-medium text-rose-200">
               {error}
             </div>
           )}
@@ -186,6 +192,7 @@ export const AuthModal: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
+            aria-busy={loading}
             className="btn-primary-mint w-full py-3.5 rounded-full text-xs font-bold transition-all mt-4 cursor-pointer"
           >
             {loading ? 'Chargement...' : tab === 'login' ? 'Se connecter' : 'Valider l\'inscription'}

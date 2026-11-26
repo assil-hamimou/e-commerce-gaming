@@ -27,11 +27,11 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        display: ['"A Dream Come True"', 'cursive', 'sans-serif'],
-        dream: ['"A Dream Come True"', 'cursive', 'sans-serif'],
-        bright: ['"Bright Marching"', 'serif'],
-        brand: ['"Bright Marching"', 'serif'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'DM Sans', 'sans-serif'],
+        dream: ['"Space Grotesk"', 'DM Sans', 'sans-serif'],
+        bright: ['"Space Grotesk"', 'DM Sans', 'sans-serif'],
+        brand: ['"Space Grotesk"', 'DM Sans', 'sans-serif'],
       },
       boxShadow: {
         'brand-glow': '0 0 25px -4px rgba(207, 234, 224, 0.25), 0 0 10px -2px rgba(207, 234, 224, 0.15)',

@@ -2,6 +2,13 @@
 
 Ce dossier contient l'application frontend moderne développée avec **React 18**, **Vite**, **TypeScript** et **Tailwind CSS**, connectée à l'API REST PHP / MySQL de GameStore.
 
+## Direction visuelle
+
+- **Typographie** : Space Grotesk pour les titres et DM Sans pour le texte, combinaison mise en avant par [Fontpair](https://fontpair.co/?webview=1) et ajustée à la lisibilité du catalogue.
+- **Boutons** : effets de survol courts et lumineux inspirés des composants communautaires de [Uiverse](https://uiverse.io/), adaptés aux couleurs A2SIL.
+- **Fonds** : fichier SVG fluide local inspiré des générateurs d'abstractions de [fffuel](https://fffuel.co/).
+- **Illustration** : scène « Game world » de [unDraw](https://undraw.co/illustration/game-world_z4nd), recolorée avec l'accent A2SIL pour le panneau principal quand un produit n'a pas de couverture.
+
 ---
 
 ## Démarrage rapide
@@ -14,9 +21,11 @@ Ce dossier contient l'application frontend moderne développée avec **React 18*
 
 ```bash
 cd c:\xampp\htdocs\game-store\frontend
-npm install
-npm run dev
+npm.cmd install
+npm.cmd run dev
 ```
+
+`npm.cmd` fonctionne dans PowerShell même si l'exécution des scripts `.ps1` est désactivée.
 
 L'application démarre immédiatement sur :
 👉 **http://localhost:5173**

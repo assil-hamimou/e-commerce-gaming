@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShoppingBag, ArrowLeft, Star, ShieldCheck, Zap, Flame, Sparkles, Check, Gamepad2, AlertCircle } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Star, ShieldCheck, Zap, Flame, Sparkles, Check, AlertCircle } from 'lucide-react';
 import { Game, Review } from '../types';
 import { gamesApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { GameCard } from '../components/GameCard';
+import { GameArtwork } from '../components/GameArtwork';
 
 export const GameDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,8 +46,14 @@ export const GameDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-24 flex justify-center items-center">
-        <div className="w-8 h-8 border-3 border-[#CFEAE0] border-t-transparent rounded-full animate-spin" />
+      <div aria-label="Chargement du produit" aria-busy="true" className="grid animate-pulse grid-cols-1 gap-8 pb-16 lg:grid-cols-12">
+        <div className="aspect-[4/3] rounded-[28px] border border-white/10 bg-white/[0.035] lg:col-span-5 lg:aspect-square" />
+        <div className="space-y-6 lg:col-span-7">
+          <div className="h-5 w-48 rounded-full bg-white/[0.06]" />
+          <div className="h-12 w-3/4 rounded-2xl bg-white/[0.06]" />
+          <div className="h-24 rounded-2xl bg-white/[0.06]" />
+          <div className="h-48 rounded-[24px] border border-white/10 bg-white/[0.035]" />
+        </div>
       </div>
     );
   }
@@ -72,7 +79,7 @@ export const GameDetailPage: React.FC = () => {
   const discount = oldPrice && oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : null;
 
   return (
-    <div className="space-y-16 pb-20">
+    <div className="space-y-14 pb-16">
       
       {/* Back button */}
       <div>
@@ -89,7 +96,7 @@ export const GameDetailPage: React.FC = () => {
         
         {/* Cover / Visual */}
         <div className="lg:col-span-5">
-          <div className="sticky top-28 rounded-[36px] bg-[#182236] border border-[#2F4A63] overflow-hidden aspect-[4/3] sm:aspect-square flex flex-col items-center justify-center relative shadow-brand-card">
+          <div className="card-brand sticky top-28 relative flex aspect-[4/3] flex-col items-center justify-center overflow-hidden rounded-[28px] sm:aspect-square">
             {game.image ? (
               <img
                 src={game.image.startsWith('http') ? game.image : `/assets/images/${game.image}`}
@@ -97,12 +104,7 @@ export const GameDetailPage: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#1C273E] via-[#151E30] to-[#131B2B] flex flex-col items-center justify-center p-8 text-center relative">
-                <Gamepad2 className="w-20 h-20 text-[#5B91A3]" />
-                <span className="mt-4 text-xs font-bold tracking-wider text-[#5B91A3] uppercase font-mono">
-                  {game.platform_name || 'Produit numérique'}
-                </span>
-              </div>
+              <GameArtwork game={game} />
             )}
 
             {/* Badges */}
@@ -161,9 +163,9 @@ export const GameDetailPage: React.FC = () => {
           </div>
 
           {/* Pricing Box */}
-          <div className="p-6 sm:p-7 rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-sm space-y-5">
+          <div className="surface-panel space-y-5 rounded-[24px] p-5 sm:p-7">
             <div className="flex items-baseline gap-4">
-              <span className="text-3xl sm:text-4xl font-black text-[#CFEAE0] font-mono tracking-tight drop-shadow-[0_0_12px_rgba(207,234,224,0.25)]">
+              <span className="text-3xl font-black tracking-tight text-[#CFEAE0] sm:text-4xl">
                 {price.toFixed(2)} DH
               </span>
               {oldPrice && (
@@ -179,14 +181,14 @@ export const GameDetailPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 text-xs">
-              <span className={`font-semibold flex items-center gap-1.5 ${game.stock > 0 ? 'text-[#CFEAE0]' : 'text-rose-400'}`}>
-                <span className={`w-2 h-2 rounded-full ${game.stock > 0 ? 'bg-[#CFEAE0]' : 'bg-rose-400'}`} />
-                {game.stock > 0 ? `En stock — ${game.stock} articles disponibles` : 'Rupture temporaire'}
+              <span className={`flex items-center gap-2 font-semibold ${game.stock > 0 ? 'text-emerald-200' : 'text-rose-300'}`}>
+                <span className={`h-2 w-2 rounded-full ${game.stock > 0 ? 'bg-emerald-300' : 'bg-rose-400'}`} />
+                {game.stock > 0 ? (game.stock <= 5 ? `Plus que ${game.stock} en stock` : 'En stock') : 'Indisponible'}
               </span>
             </div>
 
             {/* Quantity and CTA */}
-            {game.stock > 0 && (
+            {game.stock > 0 ? (
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <div className="flex items-center border border-[#2F4A63] rounded-full bg-[#131B2B] px-4 py-2 w-fit">
                   <span className="text-xs text-[#5B91A3] mr-3 font-semibold">Quantité :</span>
@@ -206,12 +208,17 @@ export const GameDetailPage: React.FC = () => {
                 <button
                   onClick={() => addToCart(game.id, quantity)}
                   disabled={cartLoading}
-                  className="btn-primary-mint flex-1 py-3.5 px-7 rounded-full font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+                  aria-label={`Ajouter ${game.title}, quantité ${quantity}, au panier`}
+                  className="btn-primary-mint uiverse-button flex-1 py-3.5 px-7 rounded-full font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <ShoppingBag className="w-4 h-4 text-[#131B2B]" />
-                  <span>Ajouter au panier</span>
+                  {cartLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#131B2B] border-r-transparent" /> : <ShoppingBag className="w-4 h-4 text-[#131B2B]" />}
+                  <span>{cartLoading ? 'Ajout…' : 'Ajouter au panier'}</span>
                 </button>
               </div>
+            ) : (
+              <button type="button" disabled className="w-full cursor-not-allowed rounded-2xl border border-white/10 bg-white/[0.035] py-3.5 text-sm font-semibold text-[#8ba8b4]">
+                Indisponible actuellement
+              </button>
             )}
 
             <div className="grid grid-cols-2 gap-3 pt-2 text-[11px] text-[#5B91A3] border-t border-[#2F4A63]/60">
@@ -229,7 +236,7 @@ export const GameDetailPage: React.FC = () => {
             <h3 className="text-xs font-bold text-[#5B91A3] uppercase tracking-wider">
               À propos du jeu
             </h3>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line p-6 rounded-[28px] bg-[#182236] border border-[#2F4A63]">
+            <div className="surface-panel whitespace-pre-line rounded-[24px] p-5 text-sm leading-relaxed text-slate-300 sm:p-6">
               {game.description}
             </div>
           </div>

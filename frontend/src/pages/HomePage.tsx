@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Flame, Sparkles, ArrowRight, ShieldCheck, Zap, Layers, Trophy, KeyRound, Tag, Gamepad2 } from 'lucide-react';
+import { Flame, Sparkles, ArrowRight, Layers, Trophy, KeyRound, Tag, CheckCircle2 } from 'lucide-react';
 import { Game, Category, Platform } from '../types';
 import { gamesApi, categoriesApi, platformsApi } from '../services/api';
 import { GameCard } from '../components/GameCard';
@@ -12,42 +12,50 @@ export const HomePage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [featuredRes, promoRes, newRes, catRes, platRes] = await Promise.all([
-          gamesApi.getAll({ featured: true, limit: 4 }),
-          gamesApi.getAll({ promo: true, limit: 4 }),
-          gamesApi.getAll({ new: true, limit: 4 }),
-          categoriesApi.getAll(),
-          platformsApi.getAll(),
+          gamesApi.getAll({ featured: true, limit: 4 }).catch(() => null),
+          gamesApi.getAll({ promo: true, limit: 4 }).catch(() => null),
+          gamesApi.getAll({ new: true, limit: 4 }).catch(() => null),
+          categoriesApi.getAll().catch(() => null),
+          platformsApi.getAll().catch(() => null),
         ]);
 
-        if (featuredRes.success) setFeaturedGames(featuredRes.games);
-        if (promoRes.success) setPromoGames(promoRes.games);
-        if (newRes.success) setNewGames(newRes.games);
-        if (catRes.success) setCategories(catRes.categories);
-        if (platRes.success) setPlatforms(platRes.platforms);
+        if (featuredRes?.success) setFeaturedGames(featuredRes.games);
+        if (promoRes?.success) setPromoGames(promoRes.games);
+        if (newRes?.success) setNewGames(newRes.games);
+        if (catRes?.success) setCategories(catRes.categories);
+        if (platRes?.success) setPlatforms(platRes.platforms);
+        if ([featuredRes, promoRes, newRes, catRes, platRes].some((res) => !res?.success)) {
+          setLoadError('Une partie de la boutique ne répond pas. Réessayez dans un instant.');
+        } else {
+          setLoadError('');
+        }
       } catch (err) {
         console.error('Erreur chargement données:', err);
+        setLoadError('La boutique est momentanément indisponible.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [reloadKey]);
 
   return (
-    <div className="space-y-24 pb-20">
+    <div className="space-y-20 pb-16">
       
       {/* Hero Section */}
-      <section className="relative pt-6 sm:pt-10 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+      <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(ellipse_at_80%_20%,rgba(91,145,163,0.16),transparent_40%),linear-gradient(145deg,rgba(28,41,64,0.9),rgba(19,27,43,0.92))] p-6 sm:p-10 xl:p-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           
           {/* Left Column: Big Bold Typography */}
-          <div className="lg:col-span-12 max-w-5xl space-y-6">
+          <div className="lg:col-span-7 space-y-6">
             
             {/* Small Brand Pill */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#182236] border border-[#2F4A63] text-xs font-bold text-[#CFEAE0] shadow-sm">
@@ -55,28 +63,28 @@ export const HomePage: React.FC = () => {
               <span>La boutique A2SIL</span>
             </div>
 
-            <h1 className="text-5xl sm:text-7xl xl:text-8xl font-dream-title text-white tracking-wide leading-[1.1]">
-              Jeux et crédits <br />
+            <h1 className="text-5xl sm:text-6xl xl:text-7xl font-dream-title text-white tracking-wide leading-[1.08]">
+              Jeux et crédits<br />
               <span className="bg-gradient-to-r from-[#CFEAE0] via-[#5B91A3] to-[#CFEAE0] bg-clip-text text-transparent">
                 au même endroit
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-300 max-w-xl leading-7">
               Retrouvez vos jeux préférés et vos crédits de jeu au même endroit. Choisissez un article, ajoutez-le au panier et passez commande en quelques étapes.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 to="/shop"
-                className="btn-primary-mint text-sm px-7 py-3.5 flex items-center gap-2 group cursor-pointer"
+                className="btn-primary-mint uiverse-button text-sm px-7 py-3.5 flex items-center gap-2 group cursor-pointer"
               >
                 <span>Explorer la boutique</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/shop?promo=1"
-                className="btn-primary-outline text-sm px-6 py-3 flex items-center gap-2"
+                className="btn-primary-outline uiverse-button text-sm px-6 py-3 flex items-center gap-2"
               >
                 <Flame className="w-4 h-4 text-[#CFEAE0]" />
                 <span>Voir les promotions</span>
@@ -99,95 +107,85 @@ export const HomePage: React.FC = () => {
 
           </div>
 
+          <div className="lg:col-span-5">
+            {featuredGames[0] ? (
+              <Link
+                to={`/game/${featuredGames[0].slug || featuredGames[0].id}`}
+                className="group relative isolate flex min-h-[360px] overflow-hidden rounded-[28px] border border-white/15 bg-[#182236] shadow-2xl transition-transform duration-300 hover:-translate-y-1"
+              >
+                {featuredGames[0].image ? (
+                  <img
+                    src={featuredGames[0].image.startsWith('http') ? featuredGames[0].image : `/assets/images/${featuredGames[0].image}`}
+                    alt=""
+                    className="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <>
+                    <div className="hero-art-backdrop absolute inset-0 z-0" />
+                    <img src="/illustrations/game-world.svg" alt="" className="absolute right-[7%] top-[5%] z-0 h-[68%] w-[64%] object-contain opacity-90 transition-transform duration-700 group-hover:scale-[1.04]" />
+                  </>
+                )}
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#0b111c] via-[#0b111c]/35 to-transparent" />
+                <div className="relative z-20 mt-auto w-full p-6 sm:p-7">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d9f2e9] backdrop-blur-md">
+                    <Sparkles className="h-3.5 w-3.5" /> Sélection A2SIL
+                  </span>
+                  <div className="mt-4 flex items-end justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-xs text-white/70">À découvrir</p>
+                      <h2 className="mt-1 line-clamp-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{featuredGames[0].title}</h2>
+                      <p className="mt-2 text-xs text-white/65">{featuredGames[0].platform_name || 'Produit numérique'}</p>
+                    </div>
+                    <span className="shrink-0 rounded-2xl bg-[#CFEAE0] px-4 py-3 text-sm font-extrabold text-[#131B2B] shadow-lg">
+                      {Number(featuredGames[0].price).toFixed(0)} DH
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ) : loading ? (
+              <div className="flex min-h-[360px] animate-pulse flex-col justify-between rounded-[28px] border border-white/10 bg-white/[0.035] p-7" aria-label="Chargement de la sélection" aria-busy="true">
+                <div className="h-7 w-36 rounded-full bg-white/[0.06]" />
+                <div className="h-20 w-20 rounded-3xl bg-white/[0.06]" />
+                <div className="space-y-2"><div className="h-5 w-3/4 rounded bg-white/[0.06]" /><div className="h-4 w-1/2 rounded bg-white/[0.06]" /></div>
+              </div>
+            ) : (
+              <div className="hero-art-backdrop relative isolate flex min-h-[360px] flex-col justify-between overflow-hidden rounded-[28px] border border-white/10 p-7">
+                <span className="eyebrow">{loadError ? 'Connexion en cours' : 'Votre prochaine partie'}</span>
+                <img src="/illustrations/game-world.svg" alt="Illustration d’un univers de jeu" className="absolute right-3 top-4 h-[62%] w-[70%] object-contain opacity-85" />
+                <div>
+                  <p className="text-lg font-semibold text-white">{loadError ? 'La sélection se recharge.' : 'Explorez le catalogue et trouvez votre prochain jeu.'}</p>
+                  <Link to="/shop" className="quiet-link mt-3 inline-flex items-center gap-2 text-sm font-semibold">Ouvrir le catalogue <ArrowRight className="h-4 w-4" /></Link>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
       </section>
 
-      {/* How the store works */}
-      <section className="space-y-6">
-        <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
-          <h2 className="text-3xl sm:text-5xl font-dream-title text-white tracking-wide">
-            Pourquoi choisir A2SIL
-          </h2>
-          <p className="text-xs sm:text-sm text-[#5B91A3]">
-            Une boutique claire, avec les prix en dirhams et un panier simple à utiliser.
-          </p>
+      {loadError && (
+        <div role="status" className="flex flex-col gap-3 rounded-2xl border border-amber-200/15 bg-amber-200/[0.04] px-4 py-3 text-sm text-[#d9d0b6] sm:flex-row sm:items-center sm:justify-between">
+          <span>{loadError}</span>
+          <button type="button" onClick={() => { setLoading(true); setReloadKey((key) => key + 1); }} className="shrink-0 font-semibold text-[#CFEAE0] hover:text-white">Réessayer</button>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          {/* Card 1: Primary Dark */}
-          <div className="p-7 rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-brand-card flex flex-col justify-between space-y-4 hover:border-[#CFEAE0]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#2F4A63] text-[#CFEAE0] flex items-center justify-center text-2xl shadow-sm">
-              <KeyRound className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-[#5B91A3] uppercase tracking-wider font-mono">
-                En quelques clics
-              </span>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                Clés Officielles
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Retrouvez les informations et le prix de chaque article avant de l'ajouter au panier.
-              </p>
+      <section aria-label="Les essentiels A2SIL" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[
+          { icon: KeyRound, title: 'Catalogue clair', detail: 'Détails et disponibilité affichés avant l’achat.' },
+          { icon: Tag, title: 'Prix en dirhams', detail: 'Le montant est visible dans la boutique et le panier.' },
+          { icon: CheckCircle2, title: 'Suivi de commande', detail: 'Retrouvez les mises à jour depuis votre compte.' },
+        ].map(({ icon: Icon, title, detail }) => (
+          <div key={title} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#CFEAE0]/10 text-[#CFEAE0]">
+              <Icon className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-white">{title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-[#b4c4c9]">{detail}</p>
             </div>
           </div>
-
-          {/* Card 2 */}
-          <div className="p-7 rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-brand-card flex flex-col justify-between space-y-4 hover:border-[#CFEAE0]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#2F4A63] text-[#CFEAE0] flex items-center justify-center text-2xl shadow-sm">
-              <Zap className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-[#5B91A3] uppercase tracking-wider font-mono">
-                Étape 1
-              </span>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                Choisissez un article
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Choisissez les jeux ou les crédits qui vous intéressent.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="p-7 rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-brand-card flex flex-col justify-between space-y-4 hover:border-[#CFEAE0]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#2F4A63] text-[#CFEAE0] flex items-center justify-center text-2xl shadow-sm">
-              <Tag className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-[#5B91A3] uppercase tracking-wider font-mono">
-                Étape 2
-              </span>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                Prix affichés en DH
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Le total est affiché en dirhams avant la confirmation.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4 */}
-          <div className="p-7 rounded-[32px] bg-[#182236] border border-[#2F4A63] shadow-brand-card flex flex-col justify-between space-y-4 hover:border-[#CFEAE0]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#2F4A63] text-[#CFEAE0] flex items-center justify-center text-2xl shadow-sm">
-              <Gamepad2 className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-[#5B91A3] uppercase tracking-wider font-mono">
-                Étape 3
-              </span>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                Passez votre commande
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Connectez-vous, indiquez vos informations et confirmez votre commande.
-              </p>
-            </div>
-          </div>
-
-        </div>
+        ))}
       </section>
 
       {/* Featured Games Section */}
@@ -209,16 +207,20 @@ export const HomePage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div aria-label="Chargement des jeux en vedette" aria-busy="true" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((n) => (
               <div key={n} className="h-80 rounded-[28px] bg-[#182236] border border-[#2F4A63] animate-pulse" />
             ))}
           </div>
-        ) : (
+        ) : featuredGames.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredGames.map((game) => (
               <GameCard key={game.id} game={game} />
             ))}
+          </div>
+        ) : (
+          <div className="surface-subtle rounded-2xl px-5 py-8 text-center text-sm text-[#b4c4c9]">
+            {loadError ? 'Les jeux en vedette réapparaîtront lorsque la boutique sera reconnectée.' : 'Aucun jeu n’est mis en avant pour le moment.'}
           </div>
         )}
       </section>

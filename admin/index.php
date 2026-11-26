@@ -1,106 +1,17 @@
 <?php
-require_once '../config.php';
+// The admin entry point checks access, runs the controller, and exposes its view data.
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../app/Models/AdminModel.php';
+require_once __DIR__ . '/../app/Controllers/AdminController.php';
 
-// Protection admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header('Location: ../pages/login.php');
     exit;
 }
 
 $pageTitle = 'Administration';
-$db = getDB();
-
-// Statistiques
-$totalGames = $db->query("SELECT COUNT(*) FROM games")->fetchColumn();
-$totalUsers = $db->query("SELECT COUNT(*) FROM users WHERE role = 'client'")->fetchColumn();
-$totalOrders = $db->query("SELECT COUNT(*) FROM orders")->fetchColumn();
-$totalRevenue = $db->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE status != 'cancelled'")->fetchColumn();
-
-// Dernières commandes
-$recentOrders = $db->query("
-    SELECT o.*, u.username, u.email 
-    FROM orders o 
-    LEFT JOIN users u ON o.user_id = u.id 
-    ORDER BY o.created_at DESC 
-    LIMIT 10
-")->fetchAll();
-
-// Jeux (avec CRUD)
-$action = $_GET['action'] ?? 'dashboard';
-$message = '';
-$statusLabels = [
-    'pending' => 'En attente',
-    'processing' => 'En cours',
-    'shipped' => 'Envoyée',
-    'delivered' => 'Terminée',
-    'cancelled' => 'Annulée',
-];
-
-// Supprimer un jeu
-if ($action === 'delete_game' && isset($_GET['id'])) {
-    $db->prepare("DELETE FROM games WHERE id = ?")->execute([(int)$_GET['id']]);
-    $message = '<div class="alert alert-success"> Jeu supprimé.</div>';
-    $action = 'games';
-}
-
-// Ajouter un jeu
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_game'])) {
-    $fields = ['title','slug','short_description','description','price','old_price','stock','category_id','platform_id','publisher','release_date','rating'];
-    $values = [];
-    foreach ($fields as $f) {
-        $values[$f] = trim($_POST[$f] ?? '');
-        if ($values[$f] === '') $values[$f] = null;
-    }
-    $values['is_featured'] = isset($_POST['is_featured']) ? 1 : 0;
-    $values['is_new'] = isset($_POST['is_new']) ? 1 : 0;
-
-    $db->prepare("INSERT INTO games (title,slug,short_description,description,price,old_price,stock,category_id,platform_id,publisher,release_date,rating,is_featured,is_new) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
-       ->execute(array_values($values));
-    $message = '<div class="alert alert-success"> Jeu ajouté avec succès !</div>';
-    $action = 'games';
-}
-
-// Mise à jour statut commande
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order'])) {
-    $allowedStatuses = array_keys($statusLabels);
-    $status = $_POST['status'] ?? '';
-    if (in_array($status, $allowedStatuses, true)) {
-        $db->prepare("UPDATE orders SET status = ? WHERE id = ?")
-           ->execute([$status, (int)$_POST['order_id']]);
-        $message = '<div class="alert alert-success">Statut de la commande mis à jour.</div>';
-    } else {
-        $message = '<div class="alert alert-error">Statut de commande invalide.</div>';
-    }
-    $action = 'orders';
-}
-
-// Ajouter des unités au stock existant.
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_stock'])) {
-    $gameId = (int)($_POST['game_id'] ?? 0);
-    $quantity = filter_var($_POST['stock_quantity'] ?? null, FILTER_VALIDATE_INT);
-    if ($gameId > 0 && $quantity !== false && $quantity > 0 && $quantity <= 100000) {
-        $stockUpdate = $db->prepare('UPDATE games SET stock = stock + ? WHERE id = ?');
-        $stockUpdate->execute([$quantity, $gameId]);
-        $message = $stockUpdate->rowCount()
-            ? '<div class="alert alert-success">Stock ajouté.</div>'
-            : '<div class="alert alert-error">Produit introuvable ou quantité invalide.</div>';
-    } else {
-        $message = '<div class="alert alert-error">Saisissez une quantité positive valide.</div>';
-    }
-    $action = 'stock';
-}
-
-$games_list = $db->query("SELECT g.*, p.name as platform_name, c.name as category_name FROM games g LEFT JOIN platforms p ON g.platform_id = p.id LEFT JOIN categories c ON g.category_id = c.id ORDER BY g.id DESC")->fetchAll();
-$orderItems = [];
-if ($action === 'orders') {
-    $itemsStmt = $db->query("SELECT order_id, title, quantity FROM order_items oi JOIN games g ON g.id = oi.game_id ORDER BY order_id DESC, oi.id");
-    foreach ($itemsStmt->fetchAll() as $item) {
-        $orderItems[$item['order_id']][] = $item;
-    }
-}
-$categories = $db->query("SELECT * FROM categories")->fetchAll();
-$platforms = $db->query("SELECT * FROM platforms")->fetchAll();
-$users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchAll();
+$viewData = (new AdminController(new AdminModel(getDB())))->handle($_GET, $_POST, $_SERVER['REQUEST_METHOD']);
+extract($viewData, EXTR_SKIP);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -111,27 +22,68 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
     <link rel="stylesheet" href="<?= SITE_URL ?>/assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        .admin-wrapper { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
-        .admin-sidebar { background: #182236; border-right: 1px solid #2F4A63; padding: 20px; }
-        .admin-logo { font-family: Orbitron; font-size: 18px; font-weight: 900; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .admin-wrapper { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; background: #131B2B; }
+        .admin-sidebar { position: sticky; top: 0; align-self: start; min-height: 100vh; background: rgba(24,34,54,.9); border-right: 1px solid rgba(207,234,224,.1); padding: 24px 18px; }
+        .admin-logo { font-family: Orbitron; font-size: 18px; font-weight: 900; margin-bottom: 30px; padding: 0 8px 18px; border-bottom: 1px solid var(--border); letter-spacing: .04em; }
         .admin-logo span { color: var(--accent); }
-        .admin-nav a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; transition: all 0.2s; }
+        .admin-nav a { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; transition: background .18s ease,color .18s ease,transform .18s ease; }
         .admin-nav a:hover, .admin-nav a.active { background: #2F4A63; color: #CFEAE0; }
-        .admin-content { padding: 30px; background: #131B2B; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { text-align: left; padding: 12px 15px; background: var(--bg-card); border-bottom: 2px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-        .data-table td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .admin-nav a:hover { transform: translateX(2px); }
+        .admin-content { min-width: 0; padding: clamp(20px, 4vw, 48px); background: transparent; }
+        .data-table { width: 100%; min-width: 720px; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 14px 15px; background: rgba(255,255,255,.025); border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); white-space: nowrap; }
+        .data-table td { padding: 14px 15px; border-bottom: 1px solid rgba(207,234,224,.08); font-size: 13px; vertical-align: middle; }
         .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .admin-header h1 { font-size: clamp(22px, 3vw, 30px) !important; letter-spacing: -.03em; }
+        .admin-header > span { border: 1px solid rgba(207,234,224,.1); border-radius: 999px; padding: 9px 13px; background: rgba(255,255,255,.025); }
+        .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+        .stat-card { border-radius: 20px; background: linear-gradient(150deg, rgba(28,41,64,.95), rgba(22,32,50,.98)); border-color: rgba(207,234,224,.1); transition: transform .18s ease,border-color .18s ease; }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(207,234,224,.22); }
+        .stat-value { font-size: clamp(22px, 2.5vw, 30px); }
+        .stat-label { color: #8ba8b4; }
+        .admin-shortcuts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin: 0 0 28px; }
+        .admin-shortcut { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 20px; border:1px solid rgba(207,234,224,.1); border-radius:18px; background:rgba(255,255,255,.025); transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+        .admin-shortcut:hover { background:rgba(255,255,255,.055); border-color:rgba(207,234,224,.23); transform:translateY(-1px); }
+        .admin-shortcut strong { display:block; color:#f1f7f5; font-size:14px; }
+        .admin-shortcut small { display:block; margin-top:4px; color:#8ba8b4; font-size:12px; }
+        .admin-shortcut b { color:#CFEAE0; font-size:20px; }
+        .admin-table-panel { overflow-x:auto; border:1px solid rgba(207,234,224,.1); border-radius:20px; background:rgba(24,34,54,.7); }
+        .admin-table-panel h3 { margin:0; padding:20px 20px 4px; font-size:16px; }
         .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
         .status-pending { background: rgba(245,158,11,0.2); color: #f59e0b; }
         .status-processing { background: rgba(6,182,212,0.2); color: #06b6d4; }
         .status-shipped { background: rgba(91,145,163,0.2); color: #CFEAE0; }
         .status-delivered { background: rgba(34,197,94,0.2); color: #22c55e; }
         .status-cancelled { background: rgba(239,68,68,0.2); color: #ef4444; }
+        /* Native selects use the browser's menu surface; define both states for readable Windows menus. */
+        .admin-status-select { min-width: 142px; padding: 9px 34px 9px 12px !important; color: #f4f7fb !important; background-color: #182236 !important; border: 1px solid #55718a !important; border-radius: 10px !important; color-scheme: dark; }
+        .admin-status-select option { color: #f4f7fb !important; background: #182236 !important; }
+        .admin-wrapper { color-scheme: dark; }
+        .admin-status-select:focus { outline: 3px solid rgba(122, 210, 190, .45); outline-offset: 1px; }
+        .admin-actions { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px; }
+        .admin-action-button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 16px; border:1px solid #55718a; border-radius:11px; color:#f4f7fb; background:#24364b; font-weight:700; font-size:13px; transition:background .15s ease,border-color .15s ease; }
+        .admin-action-button:hover { background:#304b63; border-color:#8eb8c3; }
+        .admin-orders-form { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:230px; }
+        .admin-orders-form .btn { min-height:38px; padding:0 13px; white-space:nowrap; }
+        .admin-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px 4px; }
+        .admin-section-heading h3 { margin:0; font-size:16px; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
         .modal-bg.open { display: flex; }
         .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 650px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        @media (max-width: 980px) { .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+        @media (max-width: 720px) {
+            .admin-wrapper { grid-template-columns: 1fr; }
+            .admin-sidebar { position: relative; min-height: auto; padding: 16px; border-right: 0; border-bottom: 1px solid rgba(207,234,224,.1); }
+            .admin-logo { margin-bottom: 12px; padding-bottom: 12px; }
+            .admin-nav { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+            .admin-nav a { white-space:nowrap; margin:0; }
+            .admin-content { padding:20px 16px 32px; }
+            .admin-header { align-items:flex-start; flex-direction:column; gap:12px; }
+            .admin-shortcuts { grid-template-columns:1fr; }
+            .data-table { min-width:680px; }
+        }
+        @media (max-width: 420px) { .stats-grid { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -163,7 +115,7 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" style="color: var(--accent2);"><?= number_format($totalRevenue, 0, ',', ' ') ?> DH</div>
-                    <div class="stat-label">Chiffre d'affaires</div>
+                    <div class="stat-label">Montant des commandes</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" style="color: var(--primary);"><?= $totalOrders ?></div>
@@ -179,8 +131,25 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
                 </div>
             </div>
 
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-                <h3 style="margin-bottom: 20px;">Dernières commandes</h3>
+            <div class="admin-shortcuts" aria-label="Raccourcis de gestion">
+                <a href="?action=orders" class="admin-shortcut">
+                    <span><strong>Commandes à traiter</strong><small>Consulter et mettre à jour les demandes.</small></span>
+                    <b><?= (int)$pendingOrders ?></b>
+                </a>
+                <a href="?action=stock" class="admin-shortcut">
+                    <span><strong>Produits bientôt épuisés</strong><small>Vérifier le stock à 5 unités ou moins.</small></span>
+                    <b><?= (int)$lowStockCount ?></b>
+                </a>
+            </div>
+
+            <div class="admin-actions" aria-label="Actions rapides">
+                <a href="?action=games" class="admin-action-button">Ajouter un produit</a>
+                <a href="?action=stock" class="admin-action-button">Ajouter du stock</a>
+                <a href="?action=orders" class="admin-action-button">Gérer les commandes</a>
+            </div>
+
+            <div class="admin-table-panel">
+                <div class="admin-section-heading"><h3>Dernières commandes</h3><a href="?action=orders" class="admin-action-button">Voir toutes</a></div>
                 <table class="data-table">
                     <thead><tr><th>#</th><th>Client</th><th>Total</th><th>Statut</th><th>Date</th></tr></thead>
                     <tbody>
@@ -206,7 +175,7 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
                 <button onclick="document.getElementById('addGameModal').classList.add('open')" class="btn btn-primary">+ Ajouter un produit</button>
             </div>
 
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+            <div class="admin-table-panel">
                 <table class="data-table">
                     <thead><tr><th>#</th><th>Titre</th><th>Plateforme</th><th>Genre</th><th>Prix</th><th>Stock</th><th>Actions</th></tr></thead>
                     <tbody>
@@ -325,7 +294,7 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
                 <h1 style="font-family: Orbitron; font-size: 22px;">Gestion du stock</h1>
                 <span style="color: var(--text-muted);">Ajoutez les quantités reçues pour un produit.</span>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+            <div class="admin-table-panel">
                 <table class="data-table">
                     <thead><tr><th>Produit</th><th>Stock actuel</th><th>Ajouter des unités</th></tr></thead>
                     <tbody>
@@ -350,7 +319,7 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
             <div class="admin-header">
                 <h1 style="font-family: Orbitron; font-size: 22px;">Commandes</h1>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+            <div class="admin-table-panel">
                 <table class="data-table">
                     <thead><tr><th>#</th><th>Client</th><th>Articles</th><th>Total</th><th>Statut</th><th>Date</th><th>Modifier</th></tr></thead>
                     <tbody>
@@ -368,14 +337,14 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
                                 <td><span class="status-badge status-<?= $order['status'] ?>"><?= htmlspecialchars($statusLabels[$order['status']] ?? $order['status']) ?></span></td>
                                 <td style="color: var(--text-muted); font-size: 13px;"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></td>
                                 <td>
-                                    <form method="POST" style="display: flex; gap: 5px;">
+                                    <form method="POST" class="admin-orders-form">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                        <select name="status" class="form-control" style="padding: 5px 8px; font-size: 13px;">
+                                        <select name="status" class="form-control admin-status-select" aria-label="Nouveau statut pour la commande <?= (int)$order['id'] ?>">
                                             <?php foreach (['pending','processing','shipped','delivered','cancelled'] as $s): ?>
-                                                <option value="<?= $s ?>" <?= $order['status'] === $s ? 'selected' : '' ?>><?= htmlspecialchars($statusLabels[$s]) ?></option>
+                                                <option value="<?= $s ?>" style="color:#f4f7fb;background-color:#182236" <?= $order['status'] === $s ? 'selected' : '' ?>><?= htmlspecialchars($statusLabels[$s]) ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <button type="submit" name="update_order" class="btn btn-accent btn-sm">✓</button>
+                                        <button type="submit" name="update_order" class="btn btn-accent btn-sm">Enregistrer</button>
                                     </form>
                                 </td>
                             </tr>
@@ -392,7 +361,7 @@ $users_list = $db->query("SELECT * FROM users ORDER BY created_at DESC")->fetchA
                 <h1 style="font-family: Orbitron; font-size: 22px;">Utilisateurs</h1>
                 <span style="color: var(--text-muted);"><?= count($users_list) ?> membres</span>
             </div>
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+            <div class="admin-table-panel">
                 <table class="data-table">
                     <thead><tr><th>#</th><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Inscrit le</th></tr></thead>
                     <tbody>

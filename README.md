@@ -48,6 +48,9 @@ game-store/
 │   │   └── types/          ← Définitions TypeScript
 │   ├── package.json
 │   └── vite.config.js
+├── app/
+│   ├── Controllers/         ← Traitement des requêtes et règles d'action (contrôleurs)
+│   └── Models/              ← Requêtes SQL et accès aux données (modèles)
 ├── config.php              ← Configuration DB + fonctions PHP
 ├── database.sql            ← Schéma + données de démo
 ├── index.php               ← Page d'accueil classique PHP
@@ -57,14 +60,22 @@ game-store/
 └── assets/                 ← Feuilles de style & images
 ```
 
+## Architecture MVC
+
+Le panneau admin suit maintenant un flux MVC simple : `admin/index.php` vérifie la session et prépare la requête, `app/Controllers/AdminController.php` traite les actions et prépare les données d'affichage, `app/Models/AdminModel.php` contient les accès SQL, et le HTML de `admin/index.php` sert de vue. Les commentaires de méthode indiquent le rôle des opérations pour faciliter leur présentation.
+
+Le frontend React sépare aussi les responsabilités : `pages/` et `components/` affichent les vues, `context/` gère l'état partagé, `services/` communique avec l'API et `types/` décrit les modèles de données. Les pages PHP publiques historiques et certains endpoints API restent organisés par fonctionnalité; leur migration complète vers MVC devra se faire progressivement pour conserver les routes existantes.
+
 ## Lancement du Frontend React
 
 Pour utiliser le frontend moderne en React :
 
 ```bash
-cd c:\xampp\htdocs\game-store\frontend
-npm run dev
+cd C:\xampp\htdocs\game-store\frontend
+npm.cmd run dev
 ```
+
+Dans PowerShell, utilisez `npm.cmd` : cela évite l'erreur de stratégie d'exécution liée à `npm.ps1`.
 
 Puis ouvrez votre navigateur sur : **http://localhost:5173**  
 *(Assurez-vous qu'Apache et MySQL sont démarrés dans le panneau XAMPP)*

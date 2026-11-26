@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" fill="none">
+  <defs>
+    <linearGradient id="ggglitch-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="45%" stop-color="hsl(184 74% 44%)"/>
+      <stop offset="100%" stop-color="hsl(332 87% 70%)"/>
+    </linearGradient>
+    <clipPath id="clip-a">
+      <path d="M0 0h66.67v800H0zm133.33 0H200v800h-66.67zm133.34 0h66.66v800h-66.66zm133.33 0h66.67v800H400zm133.33 0H600v800h-66.67zm133.34 0H800v800h-66.67z"/>
+    </clipPath>
+    <clipPath id="clip-b">
+      <path d="M66.67 0h66.66v800H66.67zm133.33 0h66.67v800H200zm133.33 0H400v800h-66.67zm133.34 0h66.66v800h-66.66zm133.33 0h66.67v800H600zm133.33 0H800v800h-66.67z"/>
+    </clipPath>
+  </defs>
+  <g stroke="url(#ggglitch-grad)" stroke-width="45">
+    <g clip-path="url(#clip-a)" opacity=".25">
+      <circle cx="400" cy="400" r="365"/><circle cx="400" cy="400" r="265"/>
+      <circle cx="400" cy="400" r="165"/><circle cx="400" cy="400" r="65"/>
+    </g>
+    <g clip-path="url(#clip-b)">
+      <circle cx="400" cy="400" r="377.5"/><circle cx="400" cy="400" r="277.5"/>
+      <circle cx="400" cy="400" r="177.5"/><circle cx="400" cy="400" r="77.5"/>
+    </g>
+  </g>
+</svg>

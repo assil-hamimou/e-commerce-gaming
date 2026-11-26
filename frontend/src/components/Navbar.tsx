@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, LogOut, Package, Flame, Sparkles, ChevronDown, Compass, ImagePlus } from 'lucide-react';
+import { ShoppingBag, Search, LogOut, Package, Flame, Sparkles, ChevronDown, Compass, ImagePlus, Menu, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +9,7 @@ export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout, setIsAuthModalOpen } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [brandLogo, setBrandLogo] = useState(() => localStorage.getItem('a2sil-brand-logo') || '');
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +18,7 @@ export const Navbar: React.FC = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      setMobileMenuOpen(false);
     }
   };
 
@@ -39,8 +41,11 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 navbar-brand transition-all">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-xl focus:bg-[#CFEAE0] focus:px-4 focus:py-2 focus:text-[#131B2B]">
+        Aller au contenu
+      </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className="flex items-center justify-between min-h-20 gap-3 sm:gap-4 py-3">
           
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
@@ -49,8 +54,8 @@ export const Navbar: React.FC = () => {
               <input type="file" accept="image/*" onChange={handleLogoUpload} className="sr-only" aria-label="Ajouter votre logo" />
             </label>
 
-            <div className="flex flex-col">
-              <span className="font-bright-brand text-2xl tracking-wider text-white flex items-center gap-1.5">
+            <div className="flex flex-col min-w-0">
+              <span className="font-bright-brand text-xl sm:text-2xl tracking-wider text-white flex items-center gap-1.5">
                 A2<span className="text-[#CFEAE0]">SIL</span>
                 <span className="text-[10px] font-sans font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-[#2F4A63] text-[#CFEAE0] border border-[#5B91A3]/40">
                   GAMES
@@ -115,7 +120,7 @@ export const Navbar: React.FC = () => {
           {/* Right Action Cluster */}
           <div className="flex items-center gap-3 shrink-0">
             
-            {/* Top Right Brand Tag in Bright Marching Font */}
+            {/* Compact brand tag stays in the new readable display typeface. */}
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#182236] border border-[#2F4A63] shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-[#CFEAE0] shadow-[0_0_8px_#CFEAE0]" />
               <span className="font-sans font-extrabold text-base tracking-wide text-[#CFEAE0]">a2sil</span>
@@ -124,11 +129,12 @@ export const Navbar: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={() => setIsCartOpen(true)}
+              aria-label={`Ouvrir le panier, ${cart.totalCount} article${cart.totalCount > 1 ? 's' : ''}`}
               className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#182236] hover:bg-[#1C273E] border border-[#2F4A63] hover:border-[#CFEAE0] text-xs font-semibold text-[#CFEAE0] transition-all shadow-sm group"
               title="Ouvrir le panier"
             >
               <ShoppingBag className="w-4 h-4 text-[#CFEAE0]" />
-              <span className="font-mono font-bold">
+              <span className="hidden font-mono font-bold sm:inline">
                 {cart.totalPrice.toFixed(2)} DH
               </span>
               {cart.totalCount > 0 && (
@@ -136,6 +142,17 @@ export const Navbar: React.FC = () => {
                   {cart.totalCount}
                 </span>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-[#182236] border border-[#2F4A63] text-[#CFEAE0] hover:bg-[#22324a] transition-colors"
+            >
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
 
             {/* Auth Button */}
@@ -167,7 +184,7 @@ export const Navbar: React.FC = () => {
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-200 hover:text-[#CFEAE0] hover:bg-[#2F4A63]/50 transition-colors"
                     >
                       <Package className="w-3.5 h-3.5 text-[#5B91A3]" />
-                      Mes Commandes & Clés
+                      Mes commandes
                     </Link>
 
                     {user.role === 'admin' && (
@@ -207,6 +224,27 @@ export const Navbar: React.FC = () => {
           </div>
 
         </div>
+
+        {mobileMenuOpen && (
+          <div id="mobile-navigation" className="md:hidden border-t border-white/10 py-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="search"
+                placeholder="Rechercher un jeu ou un crédit"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-2xl border border-[#2F4A63] bg-[#131B2B] py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#8ba8b4]"
+              />
+              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#8ba8b4]" />
+            </form>
+            <nav aria-label="Navigation principale" className="grid grid-cols-2 gap-2 text-sm font-semibold">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 hover:bg-white/[0.07]">Accueil</Link>
+              <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 hover:bg-white/[0.07]">Boutique</Link>
+              <Link to="/shop?promo=1" onClick={() => setMobileMenuOpen(false)} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 hover:bg-white/[0.07]">Promotions</Link>
+              <Link to="/shop?new=1" onClick={() => setMobileMenuOpen(false)} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 hover:bg-white/[0.07]">Nouveautés</Link>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

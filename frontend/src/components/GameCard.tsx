@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Flame, Sparkles, Check, Gamepad2 } from 'lucide-react';
+import { Plus, Flame, Sparkles } from 'lucide-react';
 import { Game } from '../types';
 import { useCart } from '../context/CartContext';
+import { GameArtwork } from './GameArtwork';
 
 interface GameCardProps {
   game: Game;
@@ -24,23 +25,20 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
   };
 
   return (
-    <div className="group relative rounded-[28px] bg-[#182236] border border-[#2F4A63] hover:border-[#CFEAE0]/60 transition-all duration-300 shadow-brand-card hover:shadow-brand-card-hover flex flex-col overflow-hidden">
+    <article className="card-brand group relative flex h-full flex-col overflow-hidden rounded-[26px]">
       
       {/* Cover / Visual Area */}
-      <Link to={`/game/${game.slug || game.id}`} className="relative h-52 sm:h-56 overflow-hidden block bg-[#131B2B]">
+      <Link to={`/game/${game.slug || game.id}`} aria-label={`Voir ${game.title}`} className="relative block aspect-[16/10] overflow-hidden bg-[#131B2B]">
         {game.image ? (
           <img
             src={game.image.startsWith('http') ? game.image : `/assets/images/${game.image}`}
             alt={game.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#1C273E] via-[#151E30] to-[#131B2B] flex flex-col items-center justify-center p-4 relative group-hover:scale-105 transition-transform duration-500">
-            {/* Subtle ambient light */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(207,234,224,0.06),transparent_70%)]" />
-            <Gamepad2 className="w-14 h-14 text-[#5B91A3]" aria-hidden="true" />
-            <span className="mt-3 text-[11px] font-bold text-[#5B91A3] tracking-wider uppercase font-mono">{game.publisher || 'Jeu numérique'}</span>
-          </div>
+          <GameArtwork game={game} className="transition-transform duration-500 group-hover:scale-105" />
         )}
 
         {/* Floating Badges */}
@@ -70,7 +68,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
       </Link>
 
       {/* Card Body */}
-      <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between gap-3">
+      <div className="flex flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
         
         {/* Platform & Category pill */}
         <div className="flex items-center justify-between text-xs gap-2">
@@ -89,7 +87,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
         <div>
           <Link
             to={`/game/${game.slug || game.id}`}
-            className="font-extrabold text-base sm:text-lg text-white group-hover:text-[#CFEAE0] transition-colors line-clamp-1 tracking-tight"
+            className="line-clamp-2 min-h-12 text-base font-bold leading-6 tracking-tight text-white transition-colors group-hover:text-[#CFEAE0]"
             title={game.title}
           >
             {game.title}
@@ -103,7 +101,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
         <div className="pt-3 border-t border-[#2F4A63]/60 flex items-center justify-between gap-3 mt-auto">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold text-[#CFEAE0] font-mono tracking-tight drop-shadow-[0_0_10px_rgba(207,234,224,0.2)]">
+              <span className="whitespace-nowrap text-[16px] font-extrabold tracking-tight text-[#CFEAE0] sm:text-lg">
                 {price.toFixed(2)} DH
               </span>
               {oldPrice && (
@@ -112,29 +110,30 @@ export const GameCard: React.FC<GameCardProps> = ({ game }) => {
                 </span>
               )}
             </div>
-            <span className={`text-[10px] font-semibold flex items-center gap-1 ${game.stock > 0 ? 'text-[#CFEAE0]' : 'text-rose-400'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${game.stock > 0 ? 'bg-[#CFEAE0]' : 'bg-rose-400'}`} />
-              {game.stock > 0 ? `En stock (${game.stock})` : 'Rupture'}
+            <span className={`mt-1 flex items-center gap-1.5 text-[11px] font-medium ${game.stock > 0 ? 'text-[#b4c4c9]' : 'text-rose-300'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${game.stock > 0 ? 'bg-emerald-300' : 'bg-rose-400'}`} />
+              {game.stock > 0 ? (game.stock <= 5 ? `Plus que ${game.stock} en stock` : 'En stock') : 'Indisponible'}
             </span>
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={game.stock <= 0 || loading}
-            className={`px-3.5 py-2 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 ${
+            aria-label={game.stock > 0 ? `Ajouter ${game.title} au panier` : `${game.title} indisponible`}
+            className={`uiverse-button px-3.5 py-2 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 ${
               game.stock > 0
-                ? 'bg-[#CFEAE0] text-[#131B2B] hover:bg-white shadow-[0_2px_12px_rgba(207,234,224,0.3)] hover:scale-105 active:scale-100 cursor-pointer'
+                ? 'bg-[#CFEAE0] text-[#131B2B] hover:bg-white active:scale-[0.98] cursor-pointer'
                 : 'bg-[#2F4A63]/40 text-[#5B91A3] cursor-not-allowed'
             }`}
             title={game.stock > 0 ? 'Ajouter au panier' : 'Indisponible'}
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Ajouter</span>
+            {loading ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-r-transparent" /> : <Plus className="w-3.5 h-3.5" />}
+            <span>{game.stock <= 0 ? 'Épuisé' : loading ? 'Ajout…' : 'Ajouter'}</span>
           </button>
         </div>
 
       </div>
 
-    </div>
+    </article>
   );
 };

@@ -2,72 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'A Dream Come True';
-  src: url('/fonts/a-dream-come-true.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Bright Marching';
-  src: url('/fonts/bright-marching.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
+  color-scheme: dark;
   --primary: #131B2B;
   --primary-hover: #2F4A63;
   --primary-dark: #5B91A3;
   --primary-light: #CFEAE0;
   --primary-glow: #CFEAE0;
+  --surface-1: #182236;
+  --surface-2: #1c2940;
+  --surface-3: #22324a;
+  --line-subtle: rgba(207, 234, 224, 0.1);
+  --line-strong: rgba(207, 234, 224, 0.18);
+  --text-primary: #f1f7f5;
+  --text-secondary: #b4c4c9;
+  --text-muted: #8ba8b4;
+  --focus-ring: #cfeae0;
+  --font-display: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
   body {
-    background-color: var(--primary);
-    color: #f1f7f5;
+    min-width: 320px;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 50% -20%, rgba(91, 145, 163, 0.13), transparent 38rem),
+      var(--primary);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Keep the supplied glitch-ring wallpaper subtle behind the readable UI. */
+  body::before {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    content: '';
+    pointer-events: none;
+    opacity: .17;
+    background: url('/illustrations/glitch-wallpaper.svg') center 12% / min(100vw, 940px) auto no-repeat;
+    animation: glitch-wallpaper-drift 34s ease-in-out infinite alternate;
+  }
+
+  @keyframes glitch-wallpaper-drift {
+    0% { transform: translate3d(-1.2%, -0.6%, 0) scale(.98); opacity: .13; }
+    50% { opacity: .18; }
+    100% { transform: translate3d(1.2%, .8%, 0) scale(1.03); opacity: .15; }
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color-scheme: dark;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #b4c4c9;
+    opacity: 1;
+  }
+
+  select option {
+    color: #f1f7f5;
+    background-color: #182236;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
   }
 }
 
 /* Big titles font class */
 .font-dream-title {
-  font-family: 'A Dream Come True', cursive, sans-serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
   line-height: 1.15;
 }
 
 /* Brand name font class */
 .font-bright-brand {
-  font-family: 'Bright Marching', serif;
-  letter-spacing: 0.06em;
+  font-family: var(--font-display);
+  letter-spacing: -0.045em;
+  font-weight: 700;
 }
 
 /* A2SIL brand buttons */
 .btn-primary-mint {
   background-color: var(--primary-light);
+  background-image: linear-gradient(110deg, transparent 15%, rgba(255,255,255,.38) 48%, transparent 78%);
+  background-size: 230% 100%;
+  background-position: 120% 0;
   color: var(--primary);
   border-radius: 9999px;
   padding: 0.65rem 1.45rem;
   font-weight: 700;
   font-size: 0.875rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-position .55s ease, transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s ease;
   box-shadow: 0 4px 18px rgba(207, 234, 224, 0.28);
 }
 
 .btn-primary-mint:hover {
   background-color: #e2f4ed;
+  background-position: -120% 0;
   transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(207, 234, 224, 0.45);
+  box-shadow: 0 8px 24px rgba(207, 234, 224, 0.22);
 }
 
 .btn-primary-mint:active {
   transform: translateY(0);
+}
+
+/* Reusable animated surface for important actions, built for the A2SIL palette. */
+.uiverse-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.uiverse-button::before {
+  position: absolute;
+  inset: -60% auto -60% -45%;
+  width: 36%;
+  content: '';
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.34), transparent);
+  transform: skewX(-18deg);
+  transition: left .48s ease, opacity .18s ease;
+}
+.uiverse-button:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(91,145,163,.2); }
+.uiverse-button:hover::before { left: 120%; opacity: 1; }
+.uiverse-button:active { transform: translateY(0) scale(.985); }
+
+/* Use the user's Bluegem cursor with native cursor fallbacks for every control. */
+body { cursor: url('/cursors/Bluegem.cur'), auto; }
+a, button, [role="button"], select { cursor: url('/cursors/Bluegem.cur'), pointer; }
+input, textarea, [contenteditable="true"] { cursor: text; }
+[aria-busy="true"], [aria-busy="true"] * {
+  cursor: url('/cursors/Bluegem-working.ani'), progress !important;
 }
 
 /* Secondary Button */
@@ -90,6 +183,14 @@
   transform: translateY(-1px);
 }
 
+/* A subtle, reusable hover sweep inspired by community UIverse button patterns. */
+.btn-primary-outline {
+  background-image: linear-gradient(110deg, transparent 20%, rgba(207,234,224,.12) 48%, transparent 78%);
+  background-size: 230% 100%;
+  background-position: 120% 0;
+}
+.btn-primary-outline:hover { background-position: -120% 0; }
+
 /* Navbar */
 .navbar-brand {
   background-color: rgba(19, 27, 43, 0.88);
@@ -100,14 +201,71 @@
 
 /* Card Glow Effect */
 .card-brand {
-  background-color: #1a2438;
-  border: 1px solid rgba(207, 234, 224, 0.1);
-  box-shadow: 0 10px 30px -5px rgba(10, 14, 24, 0.5), inset 0 1px 0 0 rgba(207, 234, 224, 0.08);
+  background: linear-gradient(155deg, rgba(28, 41, 64, 0.96), rgba(21, 31, 49, 0.98));
+  border: 1px solid var(--line-subtle);
+  box-shadow: 0 18px 44px -28px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .card-brand:hover {
-  border-color: rgba(207, 234, 224, 0.25);
-  background-color: #202d44;
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px -28px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.surface-panel {
+  background: linear-gradient(160deg, rgba(28, 41, 64, 0.94), rgba(22, 32, 50, 0.98));
+  border: 1px solid var(--line-subtle);
+  box-shadow: 0 24px 60px -40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.surface-subtle {
+  background: rgba(24, 34, 54, 0.72);
+  border: 1px solid var(--line-subtle);
+}
+
+.eyebrow {
+  color: var(--primary-dark);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.page-heading {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.12;
+  letter-spacing: 0.025em;
+}
+
+/* fffuel-inspired abstract wallpaper: layered color fields and soft wave grain. */
+.hero-art-backdrop {
+  background-color: #101827;
+  background-image:
+    radial-gradient(ellipse at 78% 22%, rgba(207,234,224,.16), transparent 34%),
+    radial-gradient(ellipse at 20% 76%, rgba(91,145,163,.34), transparent 46%),
+    url('/illustrations/glitch-wallpaper.svg'),
+    linear-gradient(145deg, #23324e, #101827 72%);
+  background-position: center, center, center, center;
+  background-size: cover;
+}
+
+body { font-family: var(--font-body); }
+
+.quiet-link {
+  color: var(--primary-light);
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.quiet-link:hover {
+  color: #ffffff;
+}
+
+::selection {
+  color: var(--primary);
+  background: var(--primary-light);
 }
 
 /* Custom Scrollbar */
@@ -124,4 +282,15 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

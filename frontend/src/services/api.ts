@@ -136,7 +136,7 @@ export const authApi = {
 
 // Orders API
 export const ordersApi = {
-  getAll: () => request<{ success: boolean; orders: Order[] }>('/orders.php'),
+  getAll: () => request<{ success: boolean; message?: string; orders: Order[] }>('/orders.php'),
 
   create: (payload: { shipping_address: string; payment_method: string }) =>
     request<{ success: boolean; message: string; order_id: number; total: number }>('/orders.php', {

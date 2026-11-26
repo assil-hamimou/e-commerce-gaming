@@ -18,7 +18,7 @@ const GlobalToast: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-[#182236] text-[#CFEAE0] text-xs font-bold px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-2.5 border border-[#5B91A3]/50 shadow-[0_0_20px_rgba(207,234,224,0.2)]">
+      <div role="status" aria-live="polite" className="surface-panel flex items-center gap-2.5 rounded-2xl px-5 py-3.5 text-xs font-bold text-[#CFEAE0] shadow-2xl">
         <span className="w-2 h-2 rounded-full bg-[#CFEAE0] shadow-[0_0_8px_#CFEAE0]" />
         <span>{toastMessage}</span>
       </div>
@@ -31,9 +31,9 @@ export const App: React.FC = () => {
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col bg-[#131B2B] text-[#f1f7f5]">
+          <div className="min-h-screen flex flex-col text-[#f1f7f5]">
             <Navbar />
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+            <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/shop" element={<ShopPage />} />

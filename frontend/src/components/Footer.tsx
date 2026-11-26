@@ -40,9 +40,9 @@ export const Footer: React.FC = () => {
                 <Headphones className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-white font-bold text-sm tracking-tight">Support Dédié 24/7</h4>
+                <h4 className="text-white font-bold text-sm tracking-tight">Suivi de commande</h4>
                 <p className="text-[#5B91A3] text-xs mt-0.5 leading-relaxed">
-                  Retrouvez le suivi de vos commandes depuis votre compte.
+                  Consultez les dernières mises à jour depuis votre compte.
                 </p>
               </div>
             </div>

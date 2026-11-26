@@ -947,16 +947,25 @@ img {
     font-family: inherit;
     transition: all 0.25s ease;
     outline: none;
+    color-scheme: dark;
 }
 
 .form-control:focus {
-    background: #fff;
-    border-color: rgba(246, 133, 27, 0.6);
-    box-shadow: 0 0 0 4px var(--primary-light);
+    /* Keep the dark surface and light text paired while a field is focused. */
+    color: #f1f7f5;
+    background: #22324a;
+    border-color: #8eb8c3;
+    box-shadow: 0 0 0 3px rgba(142, 184, 195, 0.24);
 }
 
 .form-control::placeholder {
-    color: var(--text-muted);
+    color: #b4c4c9;
+    opacity: 1;
+}
+
+.form-control option {
+    color: #f1f7f5;
+    background-color: #182236;
 }
 
 /* ==================== ALERTES ==================== */
